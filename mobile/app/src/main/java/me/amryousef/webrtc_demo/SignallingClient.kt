@@ -86,11 +86,12 @@ class SignallingClient(
                             val jsonObject = gson.fromJson(data, JsonObject::class.java)
                             withContext(Dispatchers.Main) {
                                 // TODO send lowercase, Kotlin lib sending UPPERCASE, Cirrus lowercase
-                                if (jsonObject.has("serverUrl")) {
+                                if (jsonObject.has("type") && jsonObject.get("type").asString == "iceCandidate") {
                                     listener.onIceCandidateReceived(gson.fromJson(jsonObject, IceCandidate::class.java))
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString == "offer") {
                                     listener.onOfferReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString == "answer") {
+//                                    Log.v(".M.",data)
                                     listener.onAnswerReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
                                 }
                             }
