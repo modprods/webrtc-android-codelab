@@ -33,7 +33,7 @@ class RTCClient(
     }
 
     private val iceServer = listOf(
-        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+        PeerConnection.IceServer.builder("stun:stun.rolmail.net:3478")
             .createIceServer()
     )
 

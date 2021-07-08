@@ -34,7 +34,7 @@ class SignallingClient(
 //        private const val HOST_PORT = 8080
 //        private const val HOST_URL = "/connect"
 //    }
-// EOS config for local Cirrus instance
+ // EOS config for local Cirrus instance
     companion object {
         private const val HOST_ADDRESS = "10.1.1.17"
         private const val HOST_PORT = 80
@@ -44,7 +44,7 @@ class SignallingClient(
 //    Thu Jul  8 09:41:52 2021 - uwsgi_response_write_body_do(): Broken pipe [core/writer.c line 429] during GET /ws/console?subscribe-broadcast&publish-broadcast&echo (0.0.0.0)
 //    IOError: write error
 //    companion object {
-//        private const val HOST_ADDRESS = "api.rackandpin.com"
+//        private const val HOST_ADDRESS = "10.20.15.99"
 //        private const val HOST_PORT = 443
 //        private const val HOST_URL = "/ws/console?subscribe-broadcast&publish-broadcast&echo"
 //    }
