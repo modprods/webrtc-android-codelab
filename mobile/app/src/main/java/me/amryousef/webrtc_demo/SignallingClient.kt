@@ -7,8 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.features.websocket.ws
+import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
@@ -29,9 +28,26 @@ class SignallingClient(
     private val listener: SignallingClientListener
 ) : CoroutineScope {
 
+// WORKS
+//    companion object {
+//        private const val HOST_ADDRESS = "10.1.1.17"
+//        private const val HOST_PORT = 8080
+//        private const val HOST_URL = "/connect"
+//    }
+// EOS config for local Cirrus instance
     companion object {
-        private const val HOST_ADDRESS = "192.168.0.12"
+        private const val HOST_ADDRESS = "10.1.1.17"
+        private const val HOST_PORT = 80
+        private const val HOST_URL = "/"
     }
+    // following on ConversationServer log
+//    Thu Jul  8 09:41:52 2021 - uwsgi_response_write_body_do(): Broken pipe [core/writer.c line 429] during GET /ws/console?subscribe-broadcast&publish-broadcast&echo (0.0.0.0)
+//    IOError: write error
+//    companion object {
+//        private const val HOST_ADDRESS = "api.rackandpin.com"
+//        private const val HOST_PORT = 443
+//        private const val HOST_URL = "/ws/console?subscribe-broadcast&publish-broadcast&echo"
+//    }
 
     private val job = Job()
 
@@ -53,7 +69,7 @@ class SignallingClient(
     }
 
     private fun connect() = launch {
-        client.ws(host = HOST_ADDRESS, port = 8080, path = "/connect") {
+        client.ws(host = HOST_ADDRESS, port = HOST_PORT, path = HOST_URL) {
             listener.onConnectionEstablished()
             val sendData = sendChannel.openSubscription()
             try {
