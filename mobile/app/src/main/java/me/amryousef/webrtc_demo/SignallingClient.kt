@@ -85,12 +85,12 @@ class SignallingClient(
                             Log.v(this@SignallingClient.javaClass.simpleName, "Received: $data")
                             val jsonObject = gson.fromJson(data, JsonObject::class.java)
                             withContext(Dispatchers.Main) {
-                                // TODO send lowercase, Kotlin lib sending UPPERCASE, Cirrus lowercase
-                                if (jsonObject.has("type") && jsonObject.get("type").asString == "iceCandidate") {
+                                // TODO send lowercase, Kotlin lib sending UPPERCASE, Cirrus lowercase - normalize!
+                                if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "icecandidate") {
                                     listener.onIceCandidateReceived(gson.fromJson(jsonObject, IceCandidate::class.java))
-                                } else if (jsonObject.has("type") && jsonObject.get("type").asString == "offer") {
+                                } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "offer") {
                                     listener.onOfferReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
-                                } else if (jsonObject.has("type") && jsonObject.get("type").asString == "answer") {
+                                } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "answer") {
 //                                    Log.v(".M.",data)
                                     listener.onAnswerReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
                                 }

@@ -109,14 +109,15 @@ class RTCClient(
     private fun PeerConnection.call(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
 
         }
 
         createOffer(object : SdpObserver by sdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
-
+                // #111 add equiv to node hack in javascript
+                // sdp = offer.sdp.replace("useinbandfec=1", "useinbandfec=1;stereo=1;maxaveragebitrate=128000");
                 setLocalDescription(object : SdpObserver {
                     override fun onSetFailure(p0: String?) {
                     }
@@ -130,6 +131,8 @@ class RTCClient(
                     override fun onCreateFailure(p0: String?) {
                     }
                 }, desc)
+                // then the second bit
+                // offer.sdp = offer.sdp.replace(/(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm, "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n");
                 sdpObserver.onCreateSuccess(desc)
             }
         }, constraints)
@@ -137,8 +140,8 @@ class RTCClient(
 
     private fun PeerConnection.answer(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
         }
 
