@@ -36,7 +36,7 @@ class SignallingClient(
 //    }
  // EOS config for local Cirrus instance
     companion object {
-        private const val HOST_ADDRESS = "10.1.1.17"
+        private const val HOST_ADDRESS = "10.20.15.70"
         private const val HOST_PORT = 80
         private const val HOST_URL = "/"
     }
