@@ -1,7 +1,9 @@
 package me.amryousef.webrtc_demo
 
+import android.util.Log
 import android.app.Application
 import android.content.Context
+import com.google.gson.JsonObject
 import org.webrtc.Camera2Enumerator
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
@@ -116,8 +118,11 @@ class RTCClient(
 
         createOffer(object : SdpObserver by sdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
-                // #111 add equiv to node hack in javascript
+                // #111 add equiv to node hack in javascript - #111
                 // sdp = offer.sdp.replace("useinbandfec=1", "useinbandfec=1;stereo=1;maxaveragebitrate=128000");
+//
+//                Log.v(".M.", desc?.description.toString())
+                var cleanedDesc = SessionDescription(SessionDescription.Type.OFFER,desc?.description?.replace("useinbandfec=1", "useinbandfec=1;stereo=1;maxaveragebitrate=128000"))
                 setLocalDescription(object : SdpObserver {
                     override fun onSetFailure(p0: String?) {
                     }
@@ -130,17 +135,18 @@ class RTCClient(
 
                     override fun onCreateFailure(p0: String?) {
                     }
-                }, desc)
-                // then the second bit
-                // offer.sdp = offer.sdp.replace(/(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n/gm, "$1;x-google-start-bitrate=10000;x-google-max-bitrate=20000\r\n");
-                sdpObserver.onCreateSuccess(desc)
+                }, cleanedDesc)
+                // TODO - get regex working - then the second bit - see #111
+//                val regex = """(a=fmtp:\d+ .*level-asymmetry-allowed=.*)\r\n""".toRegex()
+//                var finalDesc = SessionDescription(SessionDescription.Type.OFFER,"test")
+                sdpObserver.onCreateSuccess(cleanedDesc)
             }
         }, constraints)
     }
 
     private fun PeerConnection.answer(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
-//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
 //            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
         }
@@ -186,6 +192,7 @@ class RTCClient(
     }
 
     fun addIceCandidate(iceCandidate: IceCandidate?) {
+        Log.v(".M.",iceCandidate.toString())
         peerConnection?.addIceCandidate(iceCandidate)
     }
 }

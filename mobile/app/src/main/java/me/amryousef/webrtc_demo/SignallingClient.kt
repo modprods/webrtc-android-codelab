@@ -21,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
+import org.webrtc.PeerConnection
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -36,7 +37,7 @@ class SignallingClient(
 //    }
  // EOS config for local Cirrus instance
     companion object {
-        private const val HOST_ADDRESS = "10.20.15.70"
+        private const val HOST_ADDRESS = "10.1.1.6"
         private const val HOST_PORT = 80
         private const val HOST_URL = "/"
     }
@@ -84,15 +85,27 @@ class SignallingClient(
                             val data = frame.readText()
                             Log.v(this@SignallingClient.javaClass.simpleName, "Received: $data")
                             val jsonObject = gson.fromJson(data, JsonObject::class.java)
+                            // TODO clean up ugly newJson blocks by using mutable Json object
                             withContext(Dispatchers.Main) {
                                 // TODO send lowercase, Kotlin lib sending UPPERCASE, Cirrus lowercase - normalize!
                                 if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "icecandidate") {
-                                    listener.onIceCandidateReceived(gson.fromJson(jsonObject, IceCandidate::class.java))
+                                    val candidate = IceCandidate(
+                                        jsonObject.get("candidate").asJsonObject.get("sdpMid").asString,
+                                        jsonObject.get("candidate").asJsonObject.get("sdpMLineIndex").asInt,
+                                        jsonObject.get("candidate").asJsonObject.get("candidate").asString
+                                    )
+                                    Log.v(".M.","sdpMid: ${jsonObject.get("candidate").asJsonObject.get("sdpMid").asString}")
+                                    listener.onIceCandidateReceived(candidate)
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "offer") {
                                     listener.onOfferReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "answer") {
 //                                    Log.v(".M.",data)
-                                    listener.onAnswerReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
+                                    val desc = SessionDescription(
+                                        SessionDescription.Type.ANSWER,
+                                        jsonObject.get("sdp").asString
+                                    )
+//                                    Log.v(".M.",newJson)
+                                    listener.onAnswerReceived(desc)
                                 }
                             }
                         }
@@ -105,7 +118,10 @@ class SignallingClient(
     }
 
     fun send(dataObject: Any?) = runBlocking {
-        sendChannel.send(gson.toJson(dataObject))
+        var data = gson.toJson(dataObject)
+        data = data.replace("description","sdp")
+        data = data.replace("OFFER","offer")
+        sendChannel.send(data)
     }
 
     fun destroy() {

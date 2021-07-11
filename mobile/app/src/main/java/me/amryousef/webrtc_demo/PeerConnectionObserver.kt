@@ -1,5 +1,6 @@
 package me.amryousef.webrtc_demo
 
+import android.util.Log
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -17,6 +18,7 @@ open class PeerConnectionObserver : PeerConnection.Observer {
     }
 
     override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
+        Log.v(this@PeerConnectionObserver.javaClass.simpleName, "onIceConnectionChange: ${p0.toString()}")
     }
 
     override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {
