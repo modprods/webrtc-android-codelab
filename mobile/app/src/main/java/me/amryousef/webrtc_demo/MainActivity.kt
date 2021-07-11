@@ -3,21 +3,25 @@ package me.amryousef.webrtc_demo
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import android.content.Context
 import androidx.core.view.isGone
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.android.synthetic.main.activity_main.call_button
-import kotlinx.android.synthetic.main.activity_main.local_view
+//import kotlinx.android.synthetic.main.activity_main.local_view
 import kotlinx.android.synthetic.main.activity_main.remote_view
 import kotlinx.android.synthetic.main.activity_main.remote_view_loading
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
 import org.webrtc.SessionDescription
+import org.webrtc.AudioTrack
+import android.media.AudioManager
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
@@ -30,6 +34,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var rtcClient: RTCClient
     private lateinit var signallingClient: SignallingClient
+    private lateinit var remoteAudioTrack : AudioTrack
+    private var currVolume = 0
 
     private val sdpObserver = object : AppSdpObserver() {
         override fun onCreateSuccess(p0: SessionDescription?) {
@@ -41,22 +47,68 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        checkCameraPermission()
+        startNegotiation()
     }
+
+
+    private fun openSpeaker() {
+        try {
+            val audioManager = this.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+             audioManager.mode = AudioManager.MODE_IN_CALL
+            currVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+//            if (!audioManager.isSpeakerphoneOn) {
+            //setSpeakerphoneOn() only work when audio mode set to MODE_IN_CALL.
+            audioManager.isSpeakerphoneOn = true
+            audioManager.isMicrophoneMute = true
+//                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
+//                        audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL),
+//                        AudioManager.STREAM_VOICE_CALL)
+            audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
+                10,
+                AudioManager.STREAM_VOICE_CALL)
+//            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+    }
+
+
+    private fun closeSpeaker() {
+        try {
+            val audioManager = this.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager.mode = AudioManager.MODE_IN_CALL
+            if (audioManager != null) {
+//                if (audioManager.isSpeakerphoneOn) {
+                audioManager.isSpeakerphoneOn = false
+//                    audioManager.isMicrophoneMute = false
+                audioManager.setStreamVolume(
+                    AudioManager.STREAM_VOICE_CALL, currVolume,
+                    AudioManager.STREAM_VOICE_CALL
+                )
+//                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 
     private fun checkCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermission()
         } else {
-            onCameraPermissionGranted()
+            startNegotiation()
         }
     }
 
-    private fun onCameraPermissionGranted() {
+    private fun startNegotiation() {
         rtcClient = RTCClient(
             application,
             object : PeerConnectionObserver() {
                 override fun onIceCandidate(p0: IceCandidate?) {
+                    Log.v(this@MainActivity.javaClass.simpleName, "onIceCandidate: ${p0.toString()}")
+
                     super.onIceCandidate(p0)
                     signallingClient.send(p0)
                     rtcClient.addIceCandidate(p0)
@@ -64,13 +116,19 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onAddStream(p0: MediaStream?) {
                     super.onAddStream(p0)
+                    Log.v(this@MainActivity.javaClass.simpleName, "onAddStream: ${p0.toString()}")
                     p0?.videoTracks?.get(0)?.addSink(remote_view)
+                    Log.v(this@MainActivity.javaClass.simpleName, "addSink: $remote_view ")
+                    if (p0?.audioTracks!!.isNotEmpty()) {
+                        openSpeaker()
+                        remoteAudioTrack = p0?.audioTracks!!.get(0)
+                    }
                 }
             }
         )
         rtcClient.initSurfaceView(remote_view)
-        rtcClient.initSurfaceView(local_view)
-        rtcClient.startLocalVideoCapture(local_view)
+//        rtcClient.initSurfaceView(local_view)
+//        rtcClient.startLocalVideoCapture(local_view)
         signallingClient = SignallingClient(createSignallingClientListener())
         call_button.setOnClickListener { rtcClient.call(sdpObserver) }
     }
@@ -122,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-            onCameraPermissionGranted()
+            startNegotiation()
         } else {
             onCameraPermissionDenied()
         }
@@ -133,6 +191,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        closeSpeaker()
         signallingClient.destroy()
         super.onDestroy()
     }

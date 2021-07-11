@@ -35,9 +35,10 @@ class SignallingClient(
 //        private const val HOST_PORT = 8080
 //        private const val HOST_URL = "/connect"
 //    }
- // EOS config for local Cirrus instance
+ // EOS config for  Cirrus instance
     companion object {
-        private const val HOST_ADDRESS = "10.1.1.6"
+//        private const val HOST_ADDRESS = "10.1.1.6"
+    private const val HOST_ADDRESS = "10.20.15.94"
         private const val HOST_PORT = 80
         private const val HOST_URL = "/"
     }
@@ -94,17 +95,15 @@ class SignallingClient(
                                         jsonObject.get("candidate").asJsonObject.get("sdpMLineIndex").asInt,
                                         jsonObject.get("candidate").asJsonObject.get("candidate").asString
                                     )
-                                    Log.v(".M.","sdpMid: ${jsonObject.get("candidate").asJsonObject.get("sdpMid").asString}")
+//                                    Log.v(".M.","sdpMid: ${jsonObject.get("candidate").asJsonObject.get("sdpMid").asString}")
                                     listener.onIceCandidateReceived(candidate)
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "offer") {
                                     listener.onOfferReceived(gson.fromJson(jsonObject, SessionDescription::class.java))
                                 } else if (jsonObject.has("type") && jsonObject.get("type").asString.toLowerCase() == "answer") {
-//                                    Log.v(".M.",data)
                                     val desc = SessionDescription(
                                         SessionDescription.Type.ANSWER,
                                         jsonObject.get("sdp").asString
                                     )
-//                                    Log.v(".M.",newJson)
                                     listener.onAnswerReceived(desc)
                                 }
                             }

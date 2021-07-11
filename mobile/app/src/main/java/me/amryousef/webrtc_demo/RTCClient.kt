@@ -46,7 +46,7 @@ class RTCClient(
 
     private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
-            .setEnableInternalTracer(true)
+            .setEnableInternalTracer(false)
             .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
             .createInitializationOptions()
         PeerConnectionFactory.initialize(options)
@@ -59,7 +59,7 @@ class RTCClient(
             .setVideoEncoderFactory(
                 DefaultVideoEncoderFactory(
                     rootEglBase.eglBaseContext,
-                    true,
+                    false,
                     true
                 )
             )
@@ -111,7 +111,7 @@ class RTCClient(
     private fun PeerConnection.call(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
 
         }
@@ -146,7 +146,7 @@ class RTCClient(
 
     private fun PeerConnection.answer(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+//            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
 //            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
         }
